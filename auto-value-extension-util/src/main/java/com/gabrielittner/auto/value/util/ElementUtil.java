@@ -21,10 +21,21 @@ import static com.google.auto.common.MoreElements.getLocalAndInheritedMethods;
 
 public final class ElementUtil {
 
+    /**
+     * Returns true if {@code cls} has a static method and has {@code returns} as return type.
+     * If {@code takes} is not null the method has to have exactly one parameter with that type,
+     * otherwise zero parameters.
+     */
     public static boolean hasStaticMethod(TypeElement cls, TypeName takes, TypeName returns) {
         return getStaticMethod(cls, takes, returns) != null;
     }
 
+    /**
+     * Returns a method that of {@code cls} has a static method and has {@code returns} as
+     * return type. If {@code takes} is not null the method has to have exactly one parameter
+     * with that type, otherwise zero parameters.
+     * Returns null if such a method doesn't exist.
+     */
     public static ExecutableElement getStaticMethod(TypeElement cls, TypeName takes,
             TypeName returns) {
         for (Element element : cls.getEnclosedElements()) {
@@ -39,11 +50,22 @@ public final class ElementUtil {
         return null;
     }
 
+    /**
+     * Returns true if {@code cls} has an abstract method and has {@code returns} as return type.
+     * If {@code takes} is not null the method has to have exactly one parameter with that type,
+     * otherwise zero parameters.
+     */
     public static boolean hasAbstractMethod(Elements elementUtils, TypeElement cls, TypeName takes,
             TypeName returns) {
         return getAbstractMethod(elementUtils, cls, takes, returns) != null;
     }
 
+    /**
+     * Returns a method that of {@code cls} has an abstract method and has {@code returns} as
+     * return type. If {@code takes} is not null the method has to have exactly one parameter
+     * with that type, otherwise zero parameters.
+     * Returns null if such a method doesn't exist.
+     */
     public static ExecutableElement getAbstractMethod(Elements elementUtils,
             TypeElement cls, TypeName takes, TypeName returns) {
         for (ExecutableElement method : getLocalAndInheritedMethods(cls, elementUtils)) {
@@ -85,11 +107,18 @@ public final class ElementUtil {
         return returns.equals(ClassName.get(method.getReturnType()));
     }
 
+    /**
+     * Returns true if given {@code className} is on the current classpath.
+     */
     public static boolean typeExists(Elements elements, ClassName className) {
         String name = className.toString();
         return elements.getTypeElement(name) != null;
     }
 
+    /**
+     * Returns true if the given {@code element} is annotated with an annotation
+     * named {@code simpleName}.
+     */
     public static boolean hasAnnotationWithName(Element element, String simpleName) {
         for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
             String name = mirror.getAnnotationType().asElement().getSimpleName().toString();
@@ -100,6 +129,10 @@ public final class ElementUtil {
         return false;
     }
 
+    /**
+     * Builds a {@link ImmutableSet} containing the names of all annotations of the given
+     * {@code element}.
+     */
     public static ImmutableSet<String> buildAnnotations(ExecutableElement element) {
         ImmutableSet.Builder<String> builder = ImmutableSet.builder();
         for (AnnotationMirror annotation : element.getAnnotationMirrors()) {
@@ -108,6 +141,12 @@ public final class ElementUtil {
         return builder.build();
     }
 
+    /**
+     * If the given {@code element} is annotated with an {@link Annotation} of class {@code clazz}
+     * it's value for {@code key} will be returned. Otherwise it will return null.
+     *
+     * @throws IllegalArgumentException if no element is defined with the given key.
+     */
     public static Object getAnnotationValue(Element element, Class<? extends Annotation> clazz,
             String key) {
         Optional<AnnotationMirror> annotation = MoreElements.getAnnotationMirror(element, clazz);
