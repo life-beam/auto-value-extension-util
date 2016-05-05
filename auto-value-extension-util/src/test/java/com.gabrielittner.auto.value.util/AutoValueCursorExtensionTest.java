@@ -47,7 +47,7 @@ public class AutoValueCursorExtensionTest {
                 + "  public abstract int a();\n"
                 + "}\n"
         );
-        JavaFileObject expected = JavaFileObjects.forSourceString("test/AutoValue_Test", ""
+        JavaFileObject expected = JavaFileObjects.forSourceString("test/$AutoValue_Test", ""
                 + "package test;\n"
                 + "abstract class $AutoValue_Test extends $$AutoValue_Test {\n"
                 + "  AutoValue_Test(int a) {\n"
@@ -70,6 +70,38 @@ public class AutoValueCursorExtensionTest {
                 .compilesWithoutError()
                 .and()
                 .generatesSources(expected, expected2);
+    }
+
+    @Test public void simpleNestedClass() {
+        JavaFileObject source = JavaFileObjects.forSourceString("test.Test", ""
+                + "package test;\n"
+                + "import com.google.auto.value.AutoValue;\n"
+                + "public class Test {\n"
+                + "  @AutoValue public static abstract class Inner {\n"
+                + "    public abstract int a();\n"
+                + "    public abstract String b();\n"
+                + "    public abstract boolean c();\n"
+                + "  }\n"
+                + "}\n"
+        );
+
+        JavaFileObject expected = JavaFileObjects.forSourceString("test/AutoValue_Test_Inner", ""
+                + "package test;\n\n"
+                + "\n"
+                + "import java.lang.String;"
+                + "\n"
+                + "final class AutoValue_Test_Inner extends $AutoValue_Test_Inner {\n"
+                + "  AutoValue_Test_Inner(int a, String b, boolean c) {\n"
+                + "    super(a, b, c);\n"
+                + "  }\n"
+                + "}\n"
+        );
+
+        assertAbout(javaSources()).that(Collections.singletonList(source))
+                .processedWith(newProcessor(new SimpleFinalAutoValueExtension()))
+                .compilesWithoutError()
+                .and()
+                .generatesSources(expected);
     }
 
     @Test public void genericClass() {
@@ -108,7 +140,7 @@ public class AutoValueCursorExtensionTest {
                 + "}\n"
         );
 
-        JavaFileObject expected = JavaFileObjects.forSourceString("test/AutoValue_Test", ""
+        JavaFileObject expected = JavaFileObjects.forSourceString("test/$AutoValue_Test", ""
                 + "package test;\n\n"
                 + "\n"
                 + "import java.lang.String;"
@@ -120,6 +152,43 @@ public class AutoValueCursorExtensionTest {
                 + "\n"
                 + "  Test test() {\n"
                 + "    return new AutoValue_Test(a(), b(), c());\n"
+                + "  }\n"
+                + "}\n"
+        );
+
+        assertAbout(javaSources()).that(Collections.singletonList(source))
+                .processedWith(newProcessor(new CallingConstructorAutoValueExtension(),
+                        new SimpleFinalAutoValueExtension()))
+                .compilesWithoutError()
+                .and()
+                .generatesSources(expected);
+    }
+
+    @Test public void nestedClassCallingFinalClassConstructor() {
+        JavaFileObject source = JavaFileObjects.forSourceString("test.Test", ""
+                + "package test;\n"
+                + "import com.google.auto.value.AutoValue;\n"
+                + "public class Test {\n"
+                + "  @AutoValue public static abstract class Inner {\n"
+                + "    public abstract int a();\n"
+                + "    public abstract String b();\n"
+                + "    public abstract boolean c();\n"
+                + "  }\n"
+                + "}\n"
+        );
+
+        JavaFileObject expected = JavaFileObjects.forSourceString("test/$AutoValue_Test_Inner", ""
+                + "package test;\n\n"
+                + "\n"
+                + "import java.lang.String;"
+                + "\n"
+                + "abstract class $AutoValue_Test_Inner extends $$AutoValue_Test_Inner {\n"
+                + "  $AutoValue_Test_Inner(int a, String b, boolean c) {\n"
+                + "    super(a, b, c);\n"
+                + "  }\n"
+                + "\n"
+                + "  Test.Inner test() {\n"
+                + "    return new AutoValue_Test_Inner(a(), b(), c());\n"
                 + "  }\n"
                 + "}\n"
         );
