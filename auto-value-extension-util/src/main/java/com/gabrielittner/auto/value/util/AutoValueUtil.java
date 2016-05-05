@@ -15,6 +15,7 @@ import com.squareup.javapoet.TypeVariableName;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
@@ -27,19 +28,24 @@ import static javax.lang.model.element.Modifier.FINAL;
  */
 public final class AutoValueUtil {
 
-    private static String getAutoValueClassSimpleName(Context context) {
-        return context.autoValueClass().getSimpleName().toString();
-    }
-
     /**
      * Returns the {@link ClassName} of the class annotated with {@link AutoValue}.
      */
     public static ClassName getAutoValueClassClassName(Context context) {
-        return ClassName.get(context.packageName(), getAutoValueClassSimpleName(context));
+        return ClassName.get(context.autoValueClass());
     }
 
     private static String getFinalClassSimpleName(Context context) {
-        return "AutoValue_" + getAutoValueClassSimpleName(context);
+        TypeElement autoValueClass = context.autoValueClass();
+        String name = autoValueClass.getSimpleName().toString();
+
+        Element enclosingElement = autoValueClass.getEnclosingElement();
+        while (enclosingElement instanceof TypeElement) {
+            name = enclosingElement.getSimpleName().toString() + "_" + name;
+            enclosingElement = enclosingElement.getEnclosingElement();
+        }
+
+        return "AutoValue_" + name;
     }
 
     /**
