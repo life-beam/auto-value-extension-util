@@ -46,33 +46,74 @@ public class ElementUtilTest {
     }
 
     @Test
+    @Deprecated
     public void methodTests() {
         TypeElement element = elements.getTypeElement(MethodTestClass.class.getCanonicalName());
 
+        // method a
         assertThat(ElementUtil.getAbstractMethod(elements, element, null, TypeName.VOID)).isNull();
         assertThat(ElementUtil.hasAbstractMethod(elements, element, null, TypeName.VOID)).isFalse();
         assertThat(ElementUtil.getStaticMethod(element, null, TypeName.VOID)).isNull();
         assertThat(ElementUtil.hasStaticMethod(element, null, TypeName.VOID)).isFalse();
 
+        // method b
         assertThat(ElementUtil.getAbstractMethod(elements, element, TypeName.get(String.class), TypeName.VOID)).isNotNull();
         assertThat(ElementUtil.hasAbstractMethod(elements, element, TypeName.get(String.class), TypeName.VOID)).isTrue();
         assertThat(ElementUtil.getStaticMethod(element, TypeName.get(String.class), TypeName.VOID)).isNull();
         assertThat(ElementUtil.hasStaticMethod(element, TypeName.get(String.class), TypeName.VOID)).isFalse();
 
+        // method c
         assertThat(ElementUtil.getAbstractMethod(elements, element, null, TypeName.INT)).isNull();
         assertThat(ElementUtil.hasAbstractMethod(elements, element, null, TypeName.INT)).isFalse();
         assertThat(ElementUtil.getStaticMethod(element, null, TypeName.INT)).isNotNull();
         assertThat(ElementUtil.hasStaticMethod(element, null, TypeName.INT)).isTrue();
 
+        // method d
         assertThat(ElementUtil.getAbstractMethod(elements, element, TypeName.get(String.class), TypeName.INT)).isNotNull();
         assertThat(ElementUtil.hasAbstractMethod(elements, element, TypeName.get(String.class), TypeName.INT)).isTrue();
         assertThat(ElementUtil.getStaticMethod(element, TypeName.get(String.class), TypeName.INT)).isNull();
         assertThat(ElementUtil.hasStaticMethod(element, TypeName.get(String.class), TypeName.INT)).isFalse();
 
+        // method e
         assertThat(ElementUtil.getAbstractMethod(elements, element, TypeName.INT, TypeName.get(String.class))).isNull();
         assertThat(ElementUtil.hasAbstractMethod(elements, element, TypeName.INT, TypeName.get(String.class))).isFalse();
         assertThat(ElementUtil.getStaticMethod(element, TypeName.INT, TypeName.get(String.class))).isNotNull();
         assertThat(ElementUtil.hasStaticMethod(element, TypeName.INT, TypeName.get(String.class))).isTrue();
+    }
+
+    @Test
+    public void matchingMethodTests() {
+        TypeElement element = elements.getTypeElement(MethodTestClass.class.getCanonicalName());
+
+        // method a
+        assertThat(ElementUtil.getMatchingAbstractMethod(elements, element, TypeName.VOID)).isNull();
+        assertThat(ElementUtil.hasMatchingAbstractMethod(elements, element, TypeName.VOID)).isFalse();
+        assertThat(ElementUtil.getMatchingStaticMethod(element, TypeName.VOID)).isNull();
+        assertThat(ElementUtil.hasMatchingStaticMethod(element, TypeName.VOID)).isFalse();
+
+        // method b
+        assertThat(ElementUtil.getMatchingAbstractMethod(elements, element, TypeName.VOID, TypeName.get(String.class))).isNotNull();
+        assertThat(ElementUtil.hasMatchingAbstractMethod(elements, element, TypeName.VOID, TypeName.get(String.class))).isTrue();
+        assertThat(ElementUtil.getMatchingStaticMethod(element, TypeName.VOID, TypeName.get(String.class))).isNull();
+        assertThat(ElementUtil.hasMatchingStaticMethod(element, TypeName.VOID, TypeName.get(String.class))).isFalse();
+
+        // method c
+        assertThat(ElementUtil.getMatchingAbstractMethod(elements, element, TypeName.INT)).isNull();
+        assertThat(ElementUtil.hasMatchingAbstractMethod(elements, element, TypeName.INT)).isFalse();
+        assertThat(ElementUtil.getMatchingStaticMethod(element, TypeName.INT)).isNotNull();
+        assertThat(ElementUtil.hasMatchingStaticMethod(element, TypeName.INT)).isTrue();
+
+        // method d
+        assertThat(ElementUtil.getMatchingAbstractMethod(elements, element, TypeName.INT, TypeName.get(String.class))).isNotNull();
+        assertThat(ElementUtil.hasMatchingAbstractMethod(elements, element, TypeName.INT, TypeName.get(String.class))).isTrue();
+        assertThat(ElementUtil.getMatchingStaticMethod(element, TypeName.INT, TypeName.get(String.class))).isNull();
+        assertThat(ElementUtil.hasMatchingStaticMethod(element, TypeName.INT, TypeName.get(String.class))).isFalse();
+
+        // method e
+        assertThat(ElementUtil.getMatchingAbstractMethod(elements, element, TypeName.get(String.class), TypeName.INT)).isNull();
+        assertThat(ElementUtil.hasMatchingAbstractMethod(elements, element, TypeName.get(String.class), TypeName.INT)).isFalse();
+        assertThat(ElementUtil.getMatchingStaticMethod(element, TypeName.get(String.class), TypeName.INT)).isNotNull();
+        assertThat(ElementUtil.hasMatchingStaticMethod(element, TypeName.get(String.class), TypeName.INT)).isTrue();
     }
 
     @SuppressWarnings("unused")
@@ -160,6 +201,7 @@ public class ElementUtilTest {
         void b(int b) { }
         void c(String c) { }
         void d(int d, int d2) { }
+        void e(String e, String e2) { }
     }
 
     @Test
@@ -168,24 +210,39 @@ public class ElementUtilTest {
         List<? extends Element> elements = element.getEnclosedElements();
 
         ExecutableElement a = (ExecutableElement) getElementWithName(elements, "a");
-        assertThat(ElementUtil.methodTakes(a, null)).isTrue();
+        assertThat(ElementUtil.methodTakes(a)).isTrue();
         assertThat(ElementUtil.methodTakes(a, TypeName.INT)).isFalse();
         assertThat(ElementUtil.methodTakes(a, TypeName.get(String.class))).isFalse();
+        assertThat(ElementUtil.methodTakes(a, TypeName.INT, TypeName.INT)).isFalse();
+        assertThat(ElementUtil.methodTakes(a, TypeName.get(String.class), TypeName.get(String.class))).isFalse();
 
         ExecutableElement b = (ExecutableElement) getElementWithName(elements, "b");
-        assertThat(ElementUtil.methodTakes(b, null)).isFalse();
+        assertThat(ElementUtil.methodTakes(b)).isFalse();
         assertThat(ElementUtil.methodTakes(b, TypeName.INT)).isTrue();
         assertThat(ElementUtil.methodTakes(b, TypeName.get(String.class))).isFalse();
+        assertThat(ElementUtil.methodTakes(b, TypeName.INT, TypeName.INT)).isFalse();
+        assertThat(ElementUtil.methodTakes(b, TypeName.get(String.class), TypeName.get(String.class))).isFalse();
 
         ExecutableElement c = (ExecutableElement) getElementWithName(elements, "c");
-        assertThat(ElementUtil.methodTakes(c, null)).isFalse();
+        assertThat(ElementUtil.methodTakes(c)).isFalse();
         assertThat(ElementUtil.methodTakes(c, TypeName.INT)).isFalse();
         assertThat(ElementUtil.methodTakes(c, TypeName.get(String.class))).isTrue();
+        assertThat(ElementUtil.methodTakes(c, TypeName.INT, TypeName.INT)).isFalse();
+        assertThat(ElementUtil.methodTakes(c, TypeName.get(String.class), TypeName.get(String.class))).isFalse();
 
         ExecutableElement d = (ExecutableElement) getElementWithName(elements, "d");
-        assertThat(ElementUtil.methodTakes(d, null)).isFalse();
+        assertThat(ElementUtil.methodTakes(d)).isFalse();
         assertThat(ElementUtil.methodTakes(d, TypeName.INT)).isFalse();
         assertThat(ElementUtil.methodTakes(d, TypeName.get(String.class))).isFalse();
+        assertThat(ElementUtil.methodTakes(d, TypeName.INT, TypeName.INT)).isTrue();
+        assertThat(ElementUtil.methodTakes(d, TypeName.get(String.class), TypeName.get(String.class))).isFalse();
+
+        ExecutableElement e = (ExecutableElement) getElementWithName(elements, "e");
+        assertThat(ElementUtil.methodTakes(e)).isFalse();
+        assertThat(ElementUtil.methodTakes(e, TypeName.INT)).isFalse();
+        assertThat(ElementUtil.methodTakes(e, TypeName.get(String.class))).isFalse();
+        assertThat(ElementUtil.methodTakes(e, TypeName.INT, TypeName.INT)).isFalse();
+        assertThat(ElementUtil.methodTakes(e, TypeName.get(String.class), TypeName.get(String.class))).isTrue();
     }
 
     @Test
