@@ -1,9 +1,11 @@
 package com.gabrielittner.auto.value.util;
 
+import com.google.auto.value.extension.AutoValueExtension;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.TypeName;
+import java.util.Map;
 import java.util.Set;
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ExecutableElement;
 
 /**
@@ -24,6 +26,18 @@ import javax.lang.model.element.ExecutableElement;
  * </pre>
  */
 public class Property {
+
+  /**
+   * Builds a List of {@link Property} for the given {@link AutoValueExtension.Context}.
+   */
+  public static ImmutableList<Property> buildProperties(AutoValueExtension.Context context) {
+    ImmutableList.Builder<Property> values = ImmutableList.builder();
+    for (Map.Entry<String, ExecutableElement> entry : context.properties().entrySet()) {
+      values.add(new Property(entry.getKey(), entry.getValue()));
+    }
+    return values.build();
+  }
+
   private final String methodName;
   private final String humanName;
   private final ExecutableElement element;
