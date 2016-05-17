@@ -8,6 +8,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.Set;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -26,11 +27,10 @@ public final class ElementUtil {
      * If {@code takes} is not null the method has to have exactly one parameter with that type,
      * otherwise zero parameters.
      *
-     * @deprecated use {@link #hasMatchingStaticMethod(TypeElement, TypeName, TypeName...)}
+     * @deprecated use {@link #getMatchingStaticMethod(TypeElement, TypeName, TypeName...)}
      */
-    @SuppressWarnings("WeakerAccess")
     public static boolean hasStaticMethod(TypeElement cls, TypeName takes, TypeName returns) {
-        return hasMatchingStaticMethod(cls, returns, toArray(takes));
+        return getMatchingStaticMethod(cls, returns, toArray(takes)).isPresent();
     }
 
     /**
@@ -41,10 +41,9 @@ public final class ElementUtil {
      *
      * @deprecated use {@link #getMatchingStaticMethod(TypeElement, TypeName, TypeName...)}
      */
-    @SuppressWarnings("WeakerAccess")
     public static ExecutableElement getStaticMethod(TypeElement cls, TypeName takes,
             TypeName returns) {
-        return getMatchingStaticMethod(cls, returns, toArray(takes));
+        return getMatchingStaticMethod(cls, returns, toArray(takes)).orNull();
     }
 
     /**
@@ -52,12 +51,12 @@ public final class ElementUtil {
      * If {@code takes} is not null the method has to have exactly one parameter with that type,
      * otherwise zero parameters.
      *
-     * @deprecated use {@link #hasMatchingAbstractMethod(Elements, TypeElement, TypeName, TypeName...)}
+     * @deprecated use {@link #getMatchingAbstractMethod(Set, TypeName, TypeName...)}
      */
-    @SuppressWarnings("WeakerAccess")
     public static boolean hasAbstractMethod(Elements elementUtils, TypeElement cls, TypeName takes,
             TypeName returns) {
-        return hasMatchingAbstractMethod(elementUtils, cls, returns, toArray(takes));
+        Set<ExecutableElement> methods = getLocalAndInheritedMethods(cls, elementUtils);
+        return getMatchingAbstractMethod(methods, returns, toArray(takes)).isPresent();
     }
 
     /**
@@ -66,12 +65,12 @@ public final class ElementUtil {
      * otherwise zero parameters.
      * Returns null if such a method doesn't exist.
      *
-     * @deprecated use {@link #getMatchingAbstractMethod(Elements, TypeElement, TypeName, TypeName...)}
+     * @deprecated use {@link #getMatchingAbstractMethod(Set, TypeName, TypeName...)}
      */
-    @SuppressWarnings("WeakerAccess")
     public static ExecutableElement getAbstractMethod(Elements elementUtils,
             TypeElement cls, TypeName takes, TypeName returns) {
-        return getMatchingAbstractMethod(elementUtils, cls, returns, toArray(takes));
+        Set<ExecutableElement> methods = getLocalAndInheritedMethods(cls, elementUtils);
+        return getMatchingAbstractMethod(methods, returns, toArray(takes)).orNull();
     }
     
     private static TypeName[] toArray(TypeName typeName) {
@@ -79,43 +78,22 @@ public final class ElementUtil {
     }
 
     /**
-     * Returns true if {@code cls} has a static method, has {@code returns} as return type
-     * and the number and types of parameters match {@code takes}.
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static boolean hasMatchingStaticMethod(TypeElement cls, TypeName returns,
-            TypeName... takes) {
-        return getMatchingStaticMethod(cls, returns, takes) != null;
-    }
-
-    /**
      * Returns a method of {@code cls} that is static, has {@code returns} as return type
      * and the number and types of parameters match {@code takes}.
      * Returns null if such a method doesn't exist.
      */
-    @SuppressWarnings("WeakerAccess")
-    public static ExecutableElement getMatchingStaticMethod(TypeElement cls, TypeName returns,
-            TypeName... takes) {
+    public static Optional<ExecutableElement> getMatchingStaticMethod(
+            TypeElement cls, TypeName returns, TypeName... takes) {
         for (Element element : cls.getEnclosedElements()) {
             if (element.getKind() != ElementKind.METHOD) {
                 continue;
             }
             ExecutableElement method = (ExecutableElement) element;
             if (methodMatches(method, Modifier.STATIC, returns, takes)) {
-                return method;
+                return Optional.of(method);
             }
         }
-        return null;
-    }
-
-    /**
-     * Returns true if {@code cls} has an abstract method, has {@code returns} as return type
-     * and the number and types of parameters match {@code takes}.
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static boolean hasMatchingAbstractMethod(Elements elementUtils, TypeElement cls,
-            TypeName returns, TypeName... takes) {
-        return getMatchingAbstractMethod(elementUtils, cls, returns, takes) != null;
+        return Optional.absent();
     }
 
     /**
@@ -123,15 +101,14 @@ public final class ElementUtil {
      * and the number and types of parameters match {@code takes}.
      * Returns null if such a method doesn't exist.
      */
-    @SuppressWarnings("WeakerAccess")
-    public static ExecutableElement getMatchingAbstractMethod(Elements elementUtils,
-            TypeElement cls, TypeName returns, TypeName... takes) {
-        for (ExecutableElement method : getLocalAndInheritedMethods(cls, elementUtils)) {
+    public static Optional<ExecutableElement> getMatchingAbstractMethod(
+            Set<ExecutableElement> methods, TypeName returns, TypeName... takes) {
+        for (ExecutableElement method : methods) {
             if (methodMatches(method, Modifier.ABSTRACT, returns, takes)) {
-                return method;
+                return Optional.of(method);
             }
         }
-        return null;
+        return Optional.absent();
     }
 
     private static boolean methodMatches(ExecutableElement method, Modifier modifier,
@@ -164,7 +141,6 @@ public final class ElementUtil {
     /**
      * Returns true if given {@code className} is on the current classpath.
      */
-    @SuppressWarnings("WeakerAccess")
     public static boolean typeExists(Elements elements, ClassName className) {
         String name = className.toString();
         return elements.getTypeElement(name) != null;
@@ -174,7 +150,6 @@ public final class ElementUtil {
      * Returns true if the given {@code element} is annotated with an annotation
      * named {@code simpleName}.
      */
-    @SuppressWarnings("WeakerAccess")
     public static boolean hasAnnotationWithName(Element element, String simpleName) {
         for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
             String name = mirror.getAnnotationType().asElement().getSimpleName().toString();
@@ -189,7 +164,6 @@ public final class ElementUtil {
      * Builds a {@link ImmutableSet} containing the names of all annotations of the given
      * {@code element}.
      */
-    @SuppressWarnings("WeakerAccess")
     public static ImmutableSet<String> buildAnnotations(ExecutableElement element) {
         ImmutableSet.Builder<String> builder = ImmutableSet.builder();
         for (AnnotationMirror annotation : element.getAnnotationMirrors()) {
@@ -204,7 +178,6 @@ public final class ElementUtil {
      *
      * @throws IllegalArgumentException if no element is defined with the given key.
      */
-    @SuppressWarnings("WeakerAccess")
     public static Object getAnnotationValue(Element element, Class<? extends Annotation> clazz,
             String key) {
         Optional<AnnotationMirror> annotation = MoreElements.getAnnotationMirror(element, clazz);
