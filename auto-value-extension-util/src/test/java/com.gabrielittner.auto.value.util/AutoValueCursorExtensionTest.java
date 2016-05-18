@@ -1,6 +1,7 @@
 package com.gabrielittner.auto.value.util;
 
 import com.gabrielittner.auto.value.util.extensions.CallingConstructorAutoValueExtension;
+import com.gabrielittner.auto.value.util.extensions.ErrorExtension;
 import com.gabrielittner.auto.value.util.extensions.SimpleAutoValueExtension;
 import com.gabrielittner.auto.value.util.extensions.SimpleFinalAutoValueExtension;
 import com.google.testing.compile.JavaFileObjects;
@@ -199,5 +200,19 @@ public class AutoValueCursorExtensionTest {
                 .compilesWithoutError()
                 .and()
                 .generatesSources(expected);
+    }
+
+    @Test public void error() {
+        JavaFileObject source = JavaFileObjects.forSourceString("test.Test", ""
+                + "package test;\n"
+                + "import com.google.auto.value.AutoValue;\n"
+                + "@AutoValue public abstract class Test {\n"
+                + "  public abstract int a();\n"
+                + "}\n"
+        );
+        assertAbout(javaSources()).that(Collections.singletonList(source))
+                .processedWith(newProcessor(new ErrorExtension()))
+                .failsToCompile()
+                .withErrorContaining("Error generating AutoValue_Test extending $AutoValue_Test with isFinal = true");
     }
 }
