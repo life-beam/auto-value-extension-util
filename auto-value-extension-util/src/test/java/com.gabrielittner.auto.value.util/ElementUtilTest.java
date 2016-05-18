@@ -1,11 +1,13 @@
 package com.gabrielittner.auto.value.util;
 
+import com.google.auto.common.MoreElements;
 import com.google.testing.compile.CompilationRule;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.List;
+import java.util.Set;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
@@ -84,36 +86,27 @@ public class ElementUtilTest {
     @Test
     public void matchingMethodTests() {
         TypeElement element = elements.getTypeElement(MethodTestClass.class.getCanonicalName());
+        Set<ExecutableElement> methods = MoreElements.getLocalAndInheritedMethods(element, elements);
 
         // method a
-        assertThat(ElementUtil.getMatchingAbstractMethod(elements, element, TypeName.VOID)).isNull();
-        assertThat(ElementUtil.hasMatchingAbstractMethod(elements, element, TypeName.VOID)).isFalse();
-        assertThat(ElementUtil.getMatchingStaticMethod(element, TypeName.VOID)).isNull();
-        assertThat(ElementUtil.hasMatchingStaticMethod(element, TypeName.VOID)).isFalse();
+        assertThat(ElementUtil.getMatchingAbstractMethod(methods, TypeName.VOID).isPresent()).isFalse();
+        assertThat(ElementUtil.getMatchingStaticMethod(element, TypeName.VOID).isPresent()).isFalse();
 
         // method b
-        assertThat(ElementUtil.getMatchingAbstractMethod(elements, element, TypeName.VOID, TypeName.get(String.class))).isNotNull();
-        assertThat(ElementUtil.hasMatchingAbstractMethod(elements, element, TypeName.VOID, TypeName.get(String.class))).isTrue();
-        assertThat(ElementUtil.getMatchingStaticMethod(element, TypeName.VOID, TypeName.get(String.class))).isNull();
-        assertThat(ElementUtil.hasMatchingStaticMethod(element, TypeName.VOID, TypeName.get(String.class))).isFalse();
+        assertThat(ElementUtil.getMatchingAbstractMethod(methods, TypeName.VOID, TypeName.get(String.class)).isPresent()).isTrue();
+        assertThat(ElementUtil.getMatchingStaticMethod(element, TypeName.VOID, TypeName.get(String.class)).isPresent()).isFalse();
 
         // method c
-        assertThat(ElementUtil.getMatchingAbstractMethod(elements, element, TypeName.INT)).isNull();
-        assertThat(ElementUtil.hasMatchingAbstractMethod(elements, element, TypeName.INT)).isFalse();
-        assertThat(ElementUtil.getMatchingStaticMethod(element, TypeName.INT)).isNotNull();
-        assertThat(ElementUtil.hasMatchingStaticMethod(element, TypeName.INT)).isTrue();
+        assertThat(ElementUtil.getMatchingAbstractMethod(methods, TypeName.INT).isPresent()).isFalse();
+        assertThat(ElementUtil.getMatchingStaticMethod(element, TypeName.INT).isPresent()).isTrue();
 
         // method d
-        assertThat(ElementUtil.getMatchingAbstractMethod(elements, element, TypeName.INT, TypeName.get(String.class))).isNotNull();
-        assertThat(ElementUtil.hasMatchingAbstractMethod(elements, element, TypeName.INT, TypeName.get(String.class))).isTrue();
-        assertThat(ElementUtil.getMatchingStaticMethod(element, TypeName.INT, TypeName.get(String.class))).isNull();
-        assertThat(ElementUtil.hasMatchingStaticMethod(element, TypeName.INT, TypeName.get(String.class))).isFalse();
+        assertThat(ElementUtil.getMatchingAbstractMethod(methods, TypeName.INT, TypeName.get(String.class)).isPresent()).isTrue();
+        assertThat(ElementUtil.getMatchingStaticMethod(element, TypeName.INT, TypeName.get(String.class)).isPresent()).isFalse();
 
         // method e
-        assertThat(ElementUtil.getMatchingAbstractMethod(elements, element, TypeName.get(String.class), TypeName.INT)).isNull();
-        assertThat(ElementUtil.hasMatchingAbstractMethod(elements, element, TypeName.get(String.class), TypeName.INT)).isFalse();
-        assertThat(ElementUtil.getMatchingStaticMethod(element, TypeName.get(String.class), TypeName.INT)).isNotNull();
-        assertThat(ElementUtil.hasMatchingStaticMethod(element, TypeName.get(String.class), TypeName.INT)).isTrue();
+        assertThat(ElementUtil.getMatchingAbstractMethod(methods, TypeName.get(String.class), TypeName.INT).isPresent()).isFalse();
+        assertThat(ElementUtil.getMatchingStaticMethod(element, TypeName.get(String.class), TypeName.INT).isPresent()).isTrue();
     }
 
     @SuppressWarnings("unused")
