@@ -15,13 +15,16 @@ import com.squareup.javapoet.TypeVariableName;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.processing.Messager;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
+import javax.tools.Diagnostic;
 
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.FINAL;
+import static javax.tools.Diagnostic.Kind.ERROR;
 
 /**
  * Convenience and boilerplate methods for implementations of {@link AutoValueExtension}.
@@ -127,6 +130,26 @@ public final class AutoValueUtil {
                 .add(constructorName)
                 .addStatement(params.toString(), properties)
                 .build();
+    }
+
+    /**
+     * Will call {@link Messager#printMessage(Diagnostic.Kind, CharSequence, Element)} with
+     * {@link Diagnostic.Kind#ERROR} and the given {@code message} for {@code property}.
+     * This will ultimately fail the build, but will not abort it right now.
+     */
+    public static void error(Context context, Property property, String message) {
+        context.processingEnvironment().getMessager()
+                .printMessage(ERROR, message, property.element());
+    }
+
+    /**
+     * Will call {@link Messager#printMessage(Diagnostic.Kind, CharSequence, Element)} with
+     * {@link Diagnostic.Kind#ERROR} and the given {@code message} formatted using {@code args}
+     * for {@code property}.
+     * This will ultimately fail the build, but will not abort it right now.
+     */
+    public static void error(Context context, Property property, String message, Object... args) {
+        error(context, property, String.format(message, args));
     }
 
     private AutoValueUtil() {
