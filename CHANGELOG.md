@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+Version 0.2.1 *(2016-06-02)*
+----------------------------
+
+#### Supports: AutoValue 1.2
+
+- removed dependency on auto-service
+
 Version 0.2.0 *(2016-05-18)*
 ----------------------------
 
