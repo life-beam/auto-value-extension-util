@@ -9,20 +9,21 @@ import java.util.Set;
 
 import static com.gabrielittner.auto.value.util.AutoValueUtil.newTypeSpecBuilder;
 
-public class CallingConstructorAutoValueExtension extends AutoValueExtension {
+public class CallConstructorExtension extends AutoValueExtension {
 
-    @Override public boolean applicable(Context context) {
+    @Override
+    public boolean applicable(Context context) {
         return true;
     }
 
-    @Override public String generateClass(Context context, String className,
-            String classToExtend, boolean isFinal) {
-        TypeSpec subclass = newTypeSpecBuilder(context, className, classToExtend, isFinal)
-                .addMethod(methodCallingConstructor(context))
-                .build();
-        return JavaFile.builder(context.packageName(), subclass)
-                .build()
-                .toString();
+    @Override
+    public String generateClass(
+            Context context, String className, String classToExtend, boolean isFinal) {
+        TypeSpec subclass =
+                newTypeSpecBuilder(context, className, classToExtend, isFinal)
+                        .addMethod(methodCallingConstructor(context))
+                        .build();
+        return JavaFile.builder(context.packageName(), subclass).build().toString();
     }
 
     private MethodSpec methodCallingConstructor(Context context) {

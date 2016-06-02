@@ -6,17 +6,17 @@ import com.squareup.javapoet.TypeSpec;
 
 import static com.gabrielittner.auto.value.util.AutoValueUtil.newTypeSpecBuilder;
 
-public class SimpleAutoValueExtension extends AutoValueExtension {
+public class AbstractExtension extends AutoValueExtension {
 
-    @Override public boolean applicable(Context context) {
+    @Override
+    public boolean applicable(Context context) {
         return true;
     }
 
-    @Override public String generateClass(Context context, String className,
-            String classToExtend, boolean isFinal) {
+    @Override
+    public String generateClass(
+            Context context, String className, String classToExtend, boolean isFinal) {
         TypeSpec subclass = newTypeSpecBuilder(context, className, classToExtend, isFinal).build();
-        return JavaFile.builder(context.packageName(), subclass)
-                .build()
-                .toString();
+        return JavaFile.builder(context.packageName(), subclass).build().toString();
     }
 }
