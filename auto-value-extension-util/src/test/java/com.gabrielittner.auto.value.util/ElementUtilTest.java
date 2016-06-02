@@ -1,6 +1,5 @@
 package com.gabrielittner.auto.value.util;
 
-import com.google.auto.common.MoreElements;
 import com.google.testing.compile.CompilationRule;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
@@ -17,12 +16,17 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import static com.google.auto.common.MoreElements.getLocalAndInheritedMethods;
 import static com.google.common.truth.Truth.assertThat;
+import static com.squareup.javapoet.TypeName.INT;
+import static com.squareup.javapoet.TypeName.VOID;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 public class ElementUtilTest {
+    
+    private static final TypeName STRING = TypeName.get(String.class);
 
     @Rule public CompilationRule compilationRule = new CompilationRule();
 
@@ -33,10 +37,9 @@ public class ElementUtilTest {
         this.elements = compilationRule.getElements();
     }
 
-
     @SuppressWarnings("unused")
     private static abstract class MethodTestClass {
-        void a() { }
+        void a() {}
         abstract void b(String b);
         static int c() {
             return 0;
@@ -49,80 +52,89 @@ public class ElementUtilTest {
 
     @Test
     @Deprecated
+    @SuppressWarnings("deprecation")
     public void methodTests() {
         TypeElement element = elements.getTypeElement(MethodTestClass.class.getCanonicalName());
 
         // method a
-        assertThat(ElementUtil.getAbstractMethod(elements, element, null, TypeName.VOID)).isNull();
-        assertThat(ElementUtil.hasAbstractMethod(elements, element, null, TypeName.VOID)).isFalse();
-        assertThat(ElementUtil.getStaticMethod(element, null, TypeName.VOID)).isNull();
-        assertThat(ElementUtil.hasStaticMethod(element, null, TypeName.VOID)).isFalse();
+        assertThat(ElementUtil.getAbstractMethod(elements, element, null, VOID)).isNull();
+        assertThat(ElementUtil.hasAbstractMethod(elements, element, null, VOID)).isFalse();
+        assertThat(ElementUtil.getStaticMethod(element, null, VOID)).isNull();
+        assertThat(ElementUtil.hasStaticMethod(element, null, VOID)).isFalse();
 
         // method b
-        assertThat(ElementUtil.getAbstractMethod(elements, element, TypeName.get(String.class), TypeName.VOID)).isNotNull();
-        assertThat(ElementUtil.hasAbstractMethod(elements, element, TypeName.get(String.class), TypeName.VOID)).isTrue();
-        assertThat(ElementUtil.getStaticMethod(element, TypeName.get(String.class), TypeName.VOID)).isNull();
-        assertThat(ElementUtil.hasStaticMethod(element, TypeName.get(String.class), TypeName.VOID)).isFalse();
+        assertThat(ElementUtil.getAbstractMethod(elements, element, STRING, VOID)).isNotNull();
+        assertThat(ElementUtil.hasAbstractMethod(elements, element, STRING, VOID)).isTrue();
+        assertThat(ElementUtil.getStaticMethod(element, STRING, VOID)).isNull();
+        assertThat(ElementUtil.hasStaticMethod(element, STRING, VOID)).isFalse();
 
         // method c
-        assertThat(ElementUtil.getAbstractMethod(elements, element, null, TypeName.INT)).isNull();
-        assertThat(ElementUtil.hasAbstractMethod(elements, element, null, TypeName.INT)).isFalse();
-        assertThat(ElementUtil.getStaticMethod(element, null, TypeName.INT)).isNotNull();
-        assertThat(ElementUtil.hasStaticMethod(element, null, TypeName.INT)).isTrue();
+        assertThat(ElementUtil.getAbstractMethod(elements, element, null, INT)).isNull();
+        assertThat(ElementUtil.hasAbstractMethod(elements, element, null, INT)).isFalse();
+        assertThat(ElementUtil.getStaticMethod(element, null, INT)).isNotNull();
+        assertThat(ElementUtil.hasStaticMethod(element, null, INT)).isTrue();
 
         // method d
-        assertThat(ElementUtil.getAbstractMethod(elements, element, TypeName.get(String.class), TypeName.INT)).isNotNull();
-        assertThat(ElementUtil.hasAbstractMethod(elements, element, TypeName.get(String.class), TypeName.INT)).isTrue();
-        assertThat(ElementUtil.getStaticMethod(element, TypeName.get(String.class), TypeName.INT)).isNull();
-        assertThat(ElementUtil.hasStaticMethod(element, TypeName.get(String.class), TypeName.INT)).isFalse();
+        assertThat(ElementUtil.getAbstractMethod(elements, element, STRING, INT)).isNotNull();
+        assertThat(ElementUtil.hasAbstractMethod(elements, element, STRING, INT)).isTrue();
+        assertThat(ElementUtil.getStaticMethod(element, STRING, INT)).isNull();
+        assertThat(ElementUtil.hasStaticMethod(element, STRING, INT)).isFalse();
 
         // method e
-        assertThat(ElementUtil.getAbstractMethod(elements, element, TypeName.INT, TypeName.get(String.class))).isNull();
-        assertThat(ElementUtil.hasAbstractMethod(elements, element, TypeName.INT, TypeName.get(String.class))).isFalse();
-        assertThat(ElementUtil.getStaticMethod(element, TypeName.INT, TypeName.get(String.class))).isNotNull();
-        assertThat(ElementUtil.hasStaticMethod(element, TypeName.INT, TypeName.get(String.class))).isTrue();
+        assertThat(ElementUtil.getAbstractMethod(elements, element, INT, STRING)).isNull();
+        assertThat(ElementUtil.hasAbstractMethod(elements, element, INT, STRING)).isFalse();
+        assertThat(ElementUtil.getStaticMethod(element, INT, STRING)).isNotNull();
+        assertThat(ElementUtil.hasStaticMethod(element, INT, STRING)).isTrue();
     }
 
     @Test
     public void matchingMethodTests() {
         TypeElement element = elements.getTypeElement(MethodTestClass.class.getCanonicalName());
-        Set<ExecutableElement> methods = MoreElements.getLocalAndInheritedMethods(element, elements);
+        Set<ExecutableElement> methods = getLocalAndInheritedMethods(element, elements);
 
         // method a
-        assertThat(ElementUtil.getMatchingAbstractMethod(methods, TypeName.VOID).isPresent()).isFalse();
-        assertThat(ElementUtil.getMatchingStaticMethod(element, TypeName.VOID).isPresent()).isFalse();
+        assertThat(ElementUtil.getMatchingAbstractMethod(methods, VOID).isPresent())
+                .isFalse();
+        assertThat(ElementUtil.getMatchingStaticMethod(element, VOID).isPresent())
+                .isFalse();
 
         // method b
-        assertThat(ElementUtil.getMatchingAbstractMethod(methods, TypeName.VOID, TypeName.get(String.class)).isPresent()).isTrue();
-        assertThat(ElementUtil.getMatchingStaticMethod(element, TypeName.VOID, TypeName.get(String.class)).isPresent()).isFalse();
+        assertThat(ElementUtil.getMatchingAbstractMethod(methods, VOID, STRING).isPresent())
+                .isTrue();
+        assertThat(ElementUtil.getMatchingStaticMethod(element, VOID, STRING).isPresent())
+                .isFalse();
 
         // method c
-        assertThat(ElementUtil.getMatchingAbstractMethod(methods, TypeName.INT).isPresent()).isFalse();
-        assertThat(ElementUtil.getMatchingStaticMethod(element, TypeName.INT).isPresent()).isTrue();
+        assertThat(ElementUtil.getMatchingAbstractMethod(methods, INT).isPresent()).isFalse();
+        assertThat(ElementUtil.getMatchingStaticMethod(element, INT).isPresent()).isTrue();
 
         // method d
-        assertThat(ElementUtil.getMatchingAbstractMethod(methods, TypeName.INT, TypeName.get(String.class)).isPresent()).isTrue();
-        assertThat(ElementUtil.getMatchingStaticMethod(element, TypeName.INT, TypeName.get(String.class)).isPresent()).isFalse();
+        assertThat(ElementUtil.getMatchingAbstractMethod(methods, INT, STRING).isPresent())
+                .isTrue();
+        assertThat(ElementUtil.getMatchingStaticMethod(element, INT, STRING).isPresent())
+                .isFalse();
 
         // method e
-        assertThat(ElementUtil.getMatchingAbstractMethod(methods, TypeName.get(String.class), TypeName.INT).isPresent()).isFalse();
-        assertThat(ElementUtil.getMatchingStaticMethod(element, TypeName.get(String.class), TypeName.INT).isPresent()).isTrue();
+        assertThat(ElementUtil.getMatchingAbstractMethod(methods, STRING, INT).isPresent())
+                .isFalse();
+        assertThat(ElementUtil.getMatchingStaticMethod(element, STRING, INT).isPresent())
+                .isTrue();
     }
 
     @SuppressWarnings("unused")
     private static abstract class MethodModifierTestClass {
-        void a() { }
+        void a() {}
         abstract void b();
-        static void c() { }
-
-        public void d() { }
+        static void c() {}
+        public void d() {}
         public abstract void e();
-        public static void f() { }
+        public static void f() {}
     }
 
     @Test
     public void hasModifier() {
-        TypeElement element = elements.getTypeElement(MethodModifierTestClass.class.getCanonicalName());
+        TypeElement element =
+                elements.getTypeElement(MethodModifierTestClass.class.getCanonicalName());
         List<? extends Element> elements = element.getEnclosedElements();
 
         ExecutableElement a = (ExecutableElement) getElementWithName(elements, "a");
@@ -158,7 +170,7 @@ public class ElementUtilTest {
 
     @SuppressWarnings("unused")
     private static class MethodReturnsTestClass {
-        void a() { }
+        void a() {}
         int b() {
             return 0;
         }
@@ -169,73 +181,75 @@ public class ElementUtilTest {
 
     @Test
     public void methodReturns() {
-        TypeElement element = elements.getTypeElement(MethodReturnsTestClass.class.getCanonicalName());
+        TypeElement element =
+                elements.getTypeElement(MethodReturnsTestClass.class.getCanonicalName());
         List<? extends Element> elements = element.getEnclosedElements();
 
         ExecutableElement a = (ExecutableElement) getElementWithName(elements, "a");
-        assertThat(ElementUtil.methodReturns(a, TypeName.VOID)).isTrue();
-        assertThat(ElementUtil.methodReturns(a, TypeName.INT)).isFalse();
-        assertThat(ElementUtil.methodReturns(a, TypeName.get(String.class))).isFalse();
+        assertThat(ElementUtil.methodReturns(a, VOID)).isTrue();
+        assertThat(ElementUtil.methodReturns(a, INT)).isFalse();
+        assertThat(ElementUtil.methodReturns(a, STRING)).isFalse();
 
         ExecutableElement b = (ExecutableElement) getElementWithName(elements, "b");
-        assertThat(ElementUtil.methodReturns(b, TypeName.VOID)).isFalse();
-        assertThat(ElementUtil.methodReturns(b, TypeName.INT)).isTrue();
-        assertThat(ElementUtil.methodReturns(b, TypeName.get(String.class))).isFalse();
+        assertThat(ElementUtil.methodReturns(b, VOID)).isFalse();
+        assertThat(ElementUtil.methodReturns(b, INT)).isTrue();
+        assertThat(ElementUtil.methodReturns(b, STRING)).isFalse();
 
         ExecutableElement c = (ExecutableElement) getElementWithName(elements, "c");
-        assertThat(ElementUtil.methodReturns(c, TypeName.VOID)).isFalse();
-        assertThat(ElementUtil.methodReturns(c, TypeName.INT)).isFalse();
-        assertThat(ElementUtil.methodReturns(c, TypeName.get(String.class))).isTrue();
+        assertThat(ElementUtil.methodReturns(c, VOID)).isFalse();
+        assertThat(ElementUtil.methodReturns(c, INT)).isFalse();
+        assertThat(ElementUtil.methodReturns(c, STRING)).isTrue();
     }
 
     @SuppressWarnings("unused")
     private static class MethodTakesTestClass {
-        void a() { }
-        void b(int b) { }
-        void c(String c) { }
-        void d(int d, int d2) { }
-        void e(String e, String e2) { }
+        void a() {}
+        void b(int b) {}
+        void c(String c) {}
+        void d(int d, int d2) {}
+        void e(String e, String e2) {}
     }
 
     @Test
     public void methodTakes() {
-        TypeElement element = elements.getTypeElement(MethodTakesTestClass.class.getCanonicalName());
+        TypeElement element =
+                elements.getTypeElement(MethodTakesTestClass.class.getCanonicalName());
         List<? extends Element> elements = element.getEnclosedElements();
 
         ExecutableElement a = (ExecutableElement) getElementWithName(elements, "a");
         assertThat(ElementUtil.methodTakes(a)).isTrue();
-        assertThat(ElementUtil.methodTakes(a, TypeName.INT)).isFalse();
-        assertThat(ElementUtil.methodTakes(a, TypeName.get(String.class))).isFalse();
-        assertThat(ElementUtil.methodTakes(a, TypeName.INT, TypeName.INT)).isFalse();
-        assertThat(ElementUtil.methodTakes(a, TypeName.get(String.class), TypeName.get(String.class))).isFalse();
+        assertThat(ElementUtil.methodTakes(a, INT)).isFalse();
+        assertThat(ElementUtil.methodTakes(a, STRING)).isFalse();
+        assertThat(ElementUtil.methodTakes(a, INT, INT)).isFalse();
+        assertThat(ElementUtil.methodTakes(a, STRING, STRING)).isFalse();
 
         ExecutableElement b = (ExecutableElement) getElementWithName(elements, "b");
         assertThat(ElementUtil.methodTakes(b)).isFalse();
-        assertThat(ElementUtil.methodTakes(b, TypeName.INT)).isTrue();
-        assertThat(ElementUtil.methodTakes(b, TypeName.get(String.class))).isFalse();
-        assertThat(ElementUtil.methodTakes(b, TypeName.INT, TypeName.INT)).isFalse();
-        assertThat(ElementUtil.methodTakes(b, TypeName.get(String.class), TypeName.get(String.class))).isFalse();
+        assertThat(ElementUtil.methodTakes(b, INT)).isTrue();
+        assertThat(ElementUtil.methodTakes(b, STRING)).isFalse();
+        assertThat(ElementUtil.methodTakes(b, INT, INT)).isFalse();
+        assertThat(ElementUtil.methodTakes(b, STRING, STRING)).isFalse();
 
         ExecutableElement c = (ExecutableElement) getElementWithName(elements, "c");
         assertThat(ElementUtil.methodTakes(c)).isFalse();
-        assertThat(ElementUtil.methodTakes(c, TypeName.INT)).isFalse();
-        assertThat(ElementUtil.methodTakes(c, TypeName.get(String.class))).isTrue();
-        assertThat(ElementUtil.methodTakes(c, TypeName.INT, TypeName.INT)).isFalse();
-        assertThat(ElementUtil.methodTakes(c, TypeName.get(String.class), TypeName.get(String.class))).isFalse();
+        assertThat(ElementUtil.methodTakes(c, INT)).isFalse();
+        assertThat(ElementUtil.methodTakes(c, STRING)).isTrue();
+        assertThat(ElementUtil.methodTakes(c, INT, INT)).isFalse();
+        assertThat(ElementUtil.methodTakes(c, STRING, STRING)).isFalse();
 
         ExecutableElement d = (ExecutableElement) getElementWithName(elements, "d");
         assertThat(ElementUtil.methodTakes(d)).isFalse();
-        assertThat(ElementUtil.methodTakes(d, TypeName.INT)).isFalse();
-        assertThat(ElementUtil.methodTakes(d, TypeName.get(String.class))).isFalse();
-        assertThat(ElementUtil.methodTakes(d, TypeName.INT, TypeName.INT)).isTrue();
-        assertThat(ElementUtil.methodTakes(d, TypeName.get(String.class), TypeName.get(String.class))).isFalse();
+        assertThat(ElementUtil.methodTakes(d, INT)).isFalse();
+        assertThat(ElementUtil.methodTakes(d, STRING)).isFalse();
+        assertThat(ElementUtil.methodTakes(d, INT, INT)).isTrue();
+        assertThat(ElementUtil.methodTakes(d, STRING, STRING)).isFalse();
 
         ExecutableElement e = (ExecutableElement) getElementWithName(elements, "e");
         assertThat(ElementUtil.methodTakes(e)).isFalse();
-        assertThat(ElementUtil.methodTakes(e, TypeName.INT)).isFalse();
-        assertThat(ElementUtil.methodTakes(e, TypeName.get(String.class))).isFalse();
-        assertThat(ElementUtil.methodTakes(e, TypeName.INT, TypeName.INT)).isFalse();
-        assertThat(ElementUtil.methodTakes(e, TypeName.get(String.class), TypeName.get(String.class))).isTrue();
+        assertThat(ElementUtil.methodTakes(e, INT)).isFalse();
+        assertThat(ElementUtil.methodTakes(e, STRING)).isFalse();
+        assertThat(ElementUtil.methodTakes(e, INT, INT)).isFalse();
+        assertThat(ElementUtil.methodTakes(e, STRING, STRING)).isTrue();
     }
 
     @Test
@@ -255,7 +269,7 @@ public class ElementUtilTest {
 
     @Retention(RUNTIME)
     @Target({METHOD, FIELD})
-    private @interface Annotation1 { }
+    private @interface Annotation1 {}
 
     @Retention(RUNTIME)
     @Target({METHOD, FIELD})

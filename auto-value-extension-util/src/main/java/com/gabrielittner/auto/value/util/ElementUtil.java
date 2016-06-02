@@ -23,8 +23,8 @@ import static com.google.auto.common.MoreElements.getLocalAndInheritedMethods;
 public final class ElementUtil {
 
     /**
-     * Returns true if {@code cls} has a static method and has {@code returns} as return type.
-     * If {@code takes} is not null the method has to have exactly one parameter with that type,
+     * Returns true if {@code cls} has a static method and has {@code returns} as return type. If
+     * {@code takes} is not null the method has to have exactly one parameter with that type,
      * otherwise zero parameters.
      *
      * @deprecated use {@link #getMatchingStaticMethod(TypeElement, TypeName, TypeName...)}
@@ -34,53 +34,51 @@ public final class ElementUtil {
     }
 
     /**
-     * Returns a method of {@code cls} that is static and has {@code returns} as return type.
-     * If {@code takes} is not null the method has to have exactly one parameter with that type,
-     * otherwise zero parameters.
-     * Returns null if such a method doesn't exist.
+     * Returns a method of {@code cls} that is static and has {@code returns} as return type. If
+     * {@code takes} is not null the method has to have exactly one parameter with that type,
+     * otherwise zero parameters. Returns null if such a method doesn't exist.
      *
      * @deprecated use {@link #getMatchingStaticMethod(TypeElement, TypeName, TypeName...)}
      */
-    public static ExecutableElement getStaticMethod(TypeElement cls, TypeName takes,
-            TypeName returns) {
+    public static ExecutableElement getStaticMethod(
+            TypeElement cls, TypeName takes, TypeName returns) {
         return getMatchingStaticMethod(cls, returns, toArray(takes)).orNull();
     }
 
     /**
-     * Returns true if {@code cls} has an abstract method and has {@code returns} as return type.
-     * If {@code takes} is not null the method has to have exactly one parameter with that type,
+     * Returns true if {@code cls} has an abstract method and has {@code returns} as return type. If
+     * {@code takes} is not null the method has to have exactly one parameter with that type,
      * otherwise zero parameters.
      *
      * @deprecated use {@link #getMatchingAbstractMethod(Set, TypeName, TypeName...)}
      */
-    public static boolean hasAbstractMethod(Elements elementUtils, TypeElement cls, TypeName takes,
-            TypeName returns) {
+    public static boolean hasAbstractMethod(
+            Elements elementUtils, TypeElement cls, TypeName takes, TypeName returns) {
         Set<ExecutableElement> methods = getLocalAndInheritedMethods(cls, elementUtils);
         return getMatchingAbstractMethod(methods, returns, toArray(takes)).isPresent();
     }
 
     /**
-     * Returns a method of {@code cls} that is abstract and has {@code returns} as return type.
-     * If {@code takes} is not null the method has to have exactly one parameter with that type,
-     * otherwise zero parameters.
-     * Returns null if such a method doesn't exist.
+     * Returns a method of {@code cls} that is abstract and has {@code returns} as return type. If
+     * {@code takes} is not null the method has to have exactly one parameter with that type,
+     * otherwise zero parameters. Returns null if such a method doesn't exist.
      *
      * @deprecated use {@link #getMatchingAbstractMethod(Set, TypeName, TypeName...)}
      */
-    public static ExecutableElement getAbstractMethod(Elements elementUtils,
-            TypeElement cls, TypeName takes, TypeName returns) {
+    public static ExecutableElement getAbstractMethod(
+            Elements elementUtils, TypeElement cls, TypeName takes, TypeName returns) {
         Set<ExecutableElement> methods = getLocalAndInheritedMethods(cls, elementUtils);
         return getMatchingAbstractMethod(methods, returns, toArray(takes)).orNull();
     }
-    
+
     private static TypeName[] toArray(TypeName typeName) {
-        return typeName != null ? new TypeName[] { typeName } : new TypeName[0];
+        return typeName != null ? new TypeName[] {typeName} : new TypeName[0];
     }
 
     /**
-     * Returns a method of {@code cls} that is static, has {@code returns} as return type
-     * and the number and types of parameters match {@code takes}.
-     * Returns null if such a method doesn't exist.
+     * Returns a method of {@code cls} that is static, has {@code returns} as return type and the
+     * number and types of parameters match {@code takes}. Returns null if such a method doesn't
+     * exist.
      */
     public static Optional<ExecutableElement> getMatchingStaticMethod(
             TypeElement cls, TypeName returns, TypeName... takes) {
@@ -97,9 +95,9 @@ public final class ElementUtil {
     }
 
     /**
-     * Returns a method of {@code cls} that is abstract, has {@code returns} as return type
-     * and the number and types of parameters match {@code takes}.
-     * Returns null if such a method doesn't exist.
+     * Returns a method of {@code cls} that is abstract, has {@code returns} as return type and the
+     * number and types of parameters match {@code takes}. Returns null if such a method doesn't
+     * exist.
      */
     public static Optional<ExecutableElement> getMatchingAbstractMethod(
             Set<ExecutableElement> methods, TypeName returns, TypeName... takes) {
@@ -111,9 +109,10 @@ public final class ElementUtil {
         return Optional.absent();
     }
 
-    private static boolean methodMatches(ExecutableElement method, Modifier modifier,
-            TypeName returns, TypeName[] takes) {
-        return hasModifier(method, modifier) && methodTakes(method, takes)
+    private static boolean methodMatches(
+            ExecutableElement method, Modifier modifier, TypeName returns, TypeName[] takes) {
+        return hasModifier(method, modifier)
+                && methodTakes(method, takes)
                 && methodReturns(method, returns);
     }
 
@@ -147,8 +146,8 @@ public final class ElementUtil {
     }
 
     /**
-     * Returns true if the given {@code element} is annotated with an annotation
-     * named {@code simpleName}.
+     * Returns true if the given {@code element} is annotated with an annotation named
+     * {@code simpleName}.
      */
     public static boolean hasAnnotationWithName(Element element, String simpleName) {
         for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
@@ -178,8 +177,8 @@ public final class ElementUtil {
      *
      * @throws IllegalArgumentException if no element is defined with the given key.
      */
-    public static Object getAnnotationValue(Element element, Class<? extends Annotation> clazz,
-            String key) {
+    public static Object getAnnotationValue(
+            Element element, Class<? extends Annotation> clazz, String key) {
         Optional<AnnotationMirror> annotation = MoreElements.getAnnotationMirror(element, clazz);
         if (annotation.isPresent()) {
             return AnnotationMirrors.getAnnotationValue(annotation.get(), key).getValue();
