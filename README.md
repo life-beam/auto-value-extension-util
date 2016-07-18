@@ -8,7 +8,7 @@ TODO
 Add a Gradle dependency:
 
 ```groovy
-compile 'com.gabrielittner.auto.util:auto-value-extension-util:0.2.0'
+compile 'com.gabrielittner.auto.util:auto-value-extension-util:0.2.1'
 ```
 
 or Maven:
@@ -16,7 +16,7 @@ or Maven:
 <dependency>
   <groupId>com.gabrielittner.auto.util</groupId>
   <artifactId>auto-value-extension-util</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.1</version>
   <scope>compile</scope>
 </dependency>
 ```
