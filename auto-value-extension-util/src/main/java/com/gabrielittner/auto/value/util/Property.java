@@ -1,12 +1,16 @@
 package com.gabrielittner.auto.value.util;
 
 import com.google.auto.value.extension.AutoValueExtension;
+import com.google.auto.value.processor.Optionalish;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.TypeName;
 import java.util.Map;
 import java.util.Set;
+
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.type.TypeMirror;
 
 /**
  * A Property of the AutoValue annotated class.
@@ -33,7 +37,7 @@ public class Property {
     public static ImmutableList<Property> buildProperties(AutoValueExtension.Context context) {
         ImmutableList.Builder<Property> values = ImmutableList.builder();
         for (Map.Entry<String, ExecutableElement> entry : context.properties().entrySet()) {
-            values.add(new Property(entry.getKey(), entry.getValue()));
+            values.add(new Property(context.processingEnvironment(), entry.getKey(), entry.getValue()));
         }
         return values.build();
     }
@@ -42,13 +46,26 @@ public class Property {
     private final String humanName;
     private final ExecutableElement element;
     private final TypeName type;
+    private final TypeName returnType;
+    private final Optionalish optionalish;
     private final ImmutableSet<String> annotations;
 
-    public Property(String humanName, ExecutableElement element) {
+    public Property(ProcessingEnvironment processingEnvironment,
+                    String humanName,
+                    ExecutableElement element) {
         this.methodName = element.getSimpleName().toString();
         this.humanName = humanName;
         this.element = element;
-        type = TypeName.get(element.getReturnType());
+
+        TypeMirror returnTypeMirror = element.getReturnType();
+        optionalish = Optionalish.createIfOptional(returnTypeMirror, "$T");
+        if (optionalish != null) {
+            type = TypeName.get(optionalish.getContainedType(processingEnvironment.getTypeUtils()));
+            returnType = TypeName.get(returnTypeMirror);
+        } else {
+            type = returnType = TypeName.get(returnTypeMirror);
+        }
+
         annotations = ElementUtil.buildAnnotations(element);
     }
 
@@ -75,10 +92,44 @@ public class Property {
     }
 
     /**
-     * The return type of the property.
+     * The type of the property.
+     *
+     * Note that if the property is {@code optional}, this method returns the {@code TypeName}
+     * of the <em>value</em> of the optional. Use {@link #returnType()} to get the actual return
+     * type of the property.
+     *
+     * {@code Optional} properties are properties of any of the following types:
+     *
+     * <ul>
+     *     {@link java.util.Optional}
+     *     {@link java.util.OptionalDouble}
+     *     {@link java.util.OptionalInt}
+     *     {@link java.util.OptionalLong}
+     *     {@link com.google.common.base.Optional}
+     * </ul>
      */
     public TypeName type() {
         return type;
+    }
+
+    /**
+     * The return type of the property.
+     */
+    public TypeName returnType() {
+        return returnType;
+    }
+
+    /**
+     * The code for getting an empty/absent instance of the {@code Optional} type of this property,
+     * if the property is optional.
+     *
+     * For example, if the property's return type is {@link java.util.Optional}, this method will
+     * return {@code $T.empty()}.
+     *
+     * If the property is not optional, this method returns null.
+     */
+    public String optionalEmpty() {
+        return optionalish != null ? optionalish.getEmpty() : null;
     }
 
     /**
@@ -93,5 +144,14 @@ public class Property {
      */
     public Boolean nullable() {
         return annotations.contains("Nullable");
+    }
+
+    /**
+     * True if the property is optional.
+     *
+     * @see #type()
+     */
+    public boolean optional() {
+        return optionalish != null;
     }
 }
