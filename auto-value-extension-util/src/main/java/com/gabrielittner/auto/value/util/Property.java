@@ -1,7 +1,6 @@
 package com.gabrielittner.auto.value.util;
 
 import com.google.auto.value.extension.AutoValueExtension;
-import com.google.auto.value.processor.Optionalish;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.TypeName;
@@ -130,6 +129,18 @@ public class Property {
      */
     public String optionalEmpty() {
         return optionalish != null ? optionalish.getEmpty() : null;
+    }
+
+    /**
+     * The code for getting the value represented by this property, if the property is optional.
+     *
+     * For example, if the property's return type is {@link java.util.OptionalInt}, this method will
+     * return {@code getAsInt()}.
+     *
+     * If the property is not optional, this method returns null.
+     */
+    public String optionalGet() {
+        return optionalish != null ? optionalish.getGet() : null;
     }
 
     /**
